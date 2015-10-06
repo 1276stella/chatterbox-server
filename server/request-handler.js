@@ -23,11 +23,14 @@ var requestHandler = function(request, response) {
   // http://nodejs.org/documentation/api/
 
   // Do some basic logging.
+
   //
   // Adding more logging to your server can be an easy way to get passive
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
   console.log("Serving request type " + request.method + " for url " + request.url);
+
+  // console.log('REQUEST : ' , request);
 
   // The outgoing status.
   var statusCode = 200;
@@ -45,6 +48,23 @@ var requestHandler = function(request, response) {
   // which includes the status and all headers.
   response.writeHead(statusCode, headers);
 
+
+  //OPTIONS Request Response
+    if (request.method === "OPTIONS") {  
+    // Add headers to response and send
+    response.writeHead(statusCode, headers);
+    response.end();
+  }
+
+  //GET Request Response
+
+    if (request.method === 'GET') {
+
+    response.write(JSON.stringify('Hey ALEX!!'));
+
+    response.end();
+    }
+
   // Make sure to always call response.end() - Node may not send
   // anything back to the client until you do. The string you pass to
   // response.end() will be the body of the response - i.e. what shows
@@ -52,9 +72,10 @@ var requestHandler = function(request, response) {
   //
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
-  response.end("Hello, World!");
+
 };
 
+exports.requestHandler = requestHandler;
 // These headers will allow Cross-Origin Resource Sharing (CORS).
 // This code allows this server to talk to websites that
 // are on different domains, for instance, your chat client.
