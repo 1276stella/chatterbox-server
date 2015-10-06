@@ -71,13 +71,15 @@ var requestHandler = function(request, response) {
     //POST Request Response
       if (request.method === "POST") {
         var statusCode = 201;
+        var body = '';
         request.on('data', function(data){ 
-          storage.results.push(JSON.parse(data));  
+          body += data; 
         });
 
         request.on('end', function(){
-          response.writeHead(statusCode, headers);  
-          response.end();
+          response.writeHead(statusCode, headers); 
+          storage.results.push(JSON.parse(body));  
+          response.end('{"Success" : "Message Received"}');
         });
 
       }
