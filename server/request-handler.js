@@ -11,9 +11,18 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
+var path = require('path');
+var fs = require('fs');
+
+
+
 var storage = {};
 storage.results = [];
 
+var responseHandler = function(response, statusCode, headers) {
+  response.writeHead(statusCode, headers);
+  response.end(JSON.stringify(storage));
+}
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
   //
@@ -31,7 +40,6 @@ var requestHandler = function(request, response) {
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
   console.log("Serving request type " + request.method + " for url " + request.url);
-  console.log('request.url: ', request.url);
   // console.log('REQUEST : ' , request);
 
   // See the note below about CORS headers.
@@ -45,52 +53,130 @@ var requestHandler = function(request, response) {
 
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
+  var statusCode;
 
-  if (request.url.indexOf('classes') !== -1 || request.url.indexOf('?order=-createdAt') !== -1) {
-
-
+  if (request.url.indexOf('classes') !== -1 || request.url.indexOf('/') !== -1) {
     //OPTIONS Request Response
       if (request.method === "OPTIONS") {  
-      // Add headers to response and send
-      // The outgoing status.
-      var statusCode = 200;  
-      response.writeHead(statusCode, headers);
-      response.end();
-    }
+        // Add headers to response and send
+        // The outgoing status.
+        statusCode = 200; 
+        responseHandler(response, statusCode, headers);
+      }
 
     //GET Request Response
 
       if (request.method === 'GET') {  
-        var statusCode = 200;  
-        response.writeHead(statusCode, headers);   
-        // response.write(JSON.stringify(storage));
-        console.log('storage: ', storage);
-        response.end(JSON.stringify(storage));
+        statusCode = 200;
+
+        if (request.url.indexOf('/?username') !== -1 || request.url === '/') {
+          // var fileName = path.basename(request.url),
+          var content = __dirname + '/client/index.html';
+
+          fs.readFile(content, function(error, contents){
+              if (!error) {
+                headers['Content-Type'] = "text/html";  
+                response.writeHead(statusCode, headers);
+                response.write(contents);
+                response.end();
+              } else {
+                console.dir(error);
+              }
+
+          }); 
+        } else if (request.url === '/styles/styles.css') {
+          // var fileName = path.basename(request.url),
+          console.log('I am a request.url: ', request.url);
+          var content = __dirname + '/client/styles/styles.css';
+
+          fs.readFile(content, function(error, contents){
+            if (!error) {
+              headers['Content-Type'] = 'text/css';
+              response.writeHead(statusCode, headers);
+              response.write(contents);
+              response.end();
+            } else {
+              console.dir(error);
+            }
+          });
+        } else if (request.url === '/images/spiffygif_46x46.gif') {
+          // var fileName = path.basename(request.url),
+          var content = __dirname + '/client/images/spiffygif_46x46.gif';
+
+          fs.readFile(content, function(error, contents){
+            if (!error) {
+              headers['Content-Type'] = 'image/gif';
+              response.writeHead(statusCode, headers);
+              response.write(contents);
+              response.end();
+            } else {
+              console.dir(error);
+            }
+          });
+        } else if (request.url === '/scripts/app.js') {
+          // var fileName = path.basename(request.url),
+          var content = __dirname + '/client/scripts/app.js';
+
+          fs.readFile(content, function(error, contents){
+            if (!error) {
+              headers['Content-Type'] = 'text/javascript';
+              response.writeHead(statusCode, headers);
+              response.write(contents);
+              response.end();
+            } else {
+              console.dir(error);
+            }
+          });
+        } else if (request.url === '/env/config.js') {
+          // var fileName = path.basename(request.url),
+          var content = __dirname + '/client/env/config.js';
+
+          fs.readFile(content, function(error, contents){
+            if (!error) {
+              headers['Content-Type'] = 'text/javascript';
+              response.writeHead(statusCode, headers);
+              response.write(contents);
+              response.end();
+            } else {
+              console.dir(error);
+            }
+          });
+        } else if (request.url === '/bower_components/jquery/jquery.min.js') {
+          // var fileName = path.basename(request.url),
+          var content = __dirname + '/client/bower_components/jquery/jquery.min.js';
+
+          fs.readFile(content, function(error, contents){
+            if (!error) {
+              headers['Content-Type'] = 'text/javascript';
+              response.writeHead(statusCode, headers);
+              response.write(contents);
+              response.end();
+            } else {
+              console.dir(error);
+            }
+          });
+        } else {
+          responseHandler(response, statusCode, headers);
+        }
       }
 
     //POST Request Response
       if (request.method === "POST") {
-        var statusCode = 201;
+        statusCode = 201;
         var body = '';
         request.on('data', function(data){ 
           body += data; 
         });
 
         request.on('end', function(){
-          response.writeHead(statusCode, headers); 
-          storage.results.push(JSON.parse(body));  
-          response.end('{"Success" : "Message Received"}');
+          storage.results.push(JSON.parse(body));
+          responseHandler(response, statusCode, headers);   
         });
-
       }
   } else {
-    var statusCode = 404;
-    response.writeHead(statusCode, headers);  
-    response.end();
+    statusCode = 404;
+    responseHandler(response, statusCode, headers);  
   }
-
-
-
 
   // Make sure to always call response.end() - Node may not send
   // anything back to the client until you do. The string you pass to
